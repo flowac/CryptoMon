@@ -58,9 +58,10 @@ typedef struct PRICE_HISTORY
 typedef struct PRICE_SUMMARY
 {
 	PH *ph = 0;
-	int32_t len = 0;
 	double gain, loss, mult = 0, pmax, pmin, vmax, vmin;
+	double last = 0, rsi = 0;
 	double div1 = 0.8, div2 = 0.2;
+	int32_t len = 0;
 	QString name;
 } PS;
 

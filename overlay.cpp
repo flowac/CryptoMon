@@ -106,12 +106,12 @@ void Overlay::keyReleaseEvent(QKeyEvent *evt)
 
 void Overlay::mouseMoveEvent(QMouseEvent *evt)
 {
-	char mxy[BUF_80];
+//	char mxy[BUF_80];
 	mpos = evt->pos();
 	gpos = evt->globalPos();
 
-	snprintf(mxy, BUF_80, "%d,%d\t\t%d,%d\n", mpos.x(), mpos.y(), gpos.x(), gpos.y());
-	LOGF(mxy);
+//	snprintf(mxy, BUF_80, "%d,%d\t\t%d,%d", mpos.x(), mpos.y(), gpos.x(), gpos.y());
+//	LOGF(mxy);
 	this->update();
 }
 
@@ -129,7 +129,7 @@ void Overlay::mousePressEvent(QMouseEvent *evt)
 		break;
 	case Qt::MiddleButton:
 		nlock = 0;
-		LOGF("middle click\n");
+		LOGF("middle click");
 		break;
 	default:break;
 	}

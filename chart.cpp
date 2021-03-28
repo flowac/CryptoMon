@@ -81,11 +81,12 @@ void Chart::graph()
 //		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].price * 0.95 - ps.pmin) * ypp,
 //				i0, h1 - (ps.ph[i].price * 0.95 - ps.pmin) * ypp, pgray2);
 		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r30 - ps.pmin) * ypp,
-				i0, h1 - (ps.ph[i].r30 - ps.pmin) * ypp, pgray2);
+				i0, h1 - (ps.ph[i].r30 - ps.pmin) * ypp, pgray);
 		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r50 - ps.pmin) * ypp,
-				i0, h1 - (ps.ph[i].r50 - ps.pmin) * ypp, pgray2);
+				i0, h1 - (ps.ph[i].r50 - ps.pmin) * ypp, pgray);
 		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r70 - ps.pmin) * ypp,
-				i0, h1 - (ps.ph[i].r70 - ps.pmin) * ypp, pgray2);
+				i0, h1 - (ps.ph[i].r70 - ps.pmin) * ypp, pgray);
+
 		//RSI
 		scn.addLine(i0 - xp, h0 - ps.ph[i-1].rsi * yp2, i0, h0 - ps.ph[i].rsi * yp2, pyellow);
 		scn.addLine(i0 - xp, h0 - (ps.ph[i].volume - ps.vmin) * ypv, i0 - xp, h0, pred);
@@ -139,7 +140,7 @@ ERRC:	resetPS();
 
 void Chart::do_last()
 {
-	int32_t		i = ps.len - 1, i0 = i - 1;
+	int32_t		i = ps.len - 1;
 	const int	rsi_p = 14;
 	double		prev, price, gain = ps.gain, loss = ps.loss;
 	double		rsi1, rsi2;
@@ -150,7 +151,7 @@ void Chart::do_last()
 	rsi1 = rsi_p;
 	rsi2 = rsi1 - 1;
 
-	prev = ps.ph[i0].price;
+	prev = ps.ph[i - 1].price;
 	price = ps.ph[i].price;
 
 	//Relative Strength Index
@@ -171,8 +172,11 @@ void Chart::do_last()
 	ps.ph[i].r50 = 0 - (tmp2 * rsi1 - price - loss * rsi2);
 
 	tmp1 = 100.0 / 30.0 - 1;
-	tmp2 = gain * rsi2 / rsi1 / tmp1;
-	ps.ph[i].r70 = 0 - (tmp2 * rsi1 - price - loss * rsi2);
+	tmp2 = loss * rsi2 / rsi1 * tmp1;
+	ps.ph[i].r70 = tmp2 * rsi1 + price - gain * rsi2;
+
+	ps.last	= ps.ph[i].price;
+	ps.rsi	= ps.ph[i].rsi;
 
 	graph();
 }
@@ -218,14 +222,14 @@ void Chart::do_calc()
 		tmp1 = 100.0 / 70.0 - 1;
 		tmp2 = gain * rsi2 / rsi1 / tmp1;
 		ps.ph[i].r30 = 0 - (tmp2 * rsi1 - price - loss * rsi2);
-		
+
 		tmp1 = 100.0 / 50.0 - 1;
 		tmp2 = gain * rsi2 / rsi1 / tmp1;
 		ps.ph[i].r50 = 0 - (tmp2 * rsi1 - price - loss * rsi2);
 
 		tmp1 = 100.0 / 30.0 - 1;
-		tmp2 = gain * rsi2 / rsi1 / tmp1;
-		ps.ph[i].r70 = 0 - (tmp2 * rsi1 - price - loss * rsi2);
+		tmp2 = loss * rsi2 / rsi1 * tmp1;
+		ps.ph[i].r70 = tmp2 * rsi1 + price - gain * rsi2;
 
 		prev = price;
 		if (i < XOFFSET) continue;
@@ -238,6 +242,10 @@ void Chart::do_calc()
 		ps.vmax = std::max(ps.vmax, ps.ph[i].volume);
 		ps.vmin = std::min(ps.vmin, ps.ph[i].volume);
 	}
+
+	ps.last	= ps.ph[i].price;
+	ps.rsi	= ps.ph[i].rsi;
+
 	ps.pmin = ceil(ps.pmin / 10) * 10;
 	ps.pmax = ceil((ps.pmax + (ps.pmax - ps.pmin) * 0.04) / 10.0) * 10;
 

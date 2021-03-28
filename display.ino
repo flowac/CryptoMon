@@ -6,45 +6,46 @@
 Adafruit_SSD1306 display(128, 32, &Wire, 4);
 
 void setup() {
-  Serial.begin(9600);
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("Init failed"));
-    for(;;);
-  }
-  while(Serial.available()) Serial.read();
+	Serial.begin(9600);
+	if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+		Serial.println(F("Init failed"));
+		for(;;);
+	}
 
-  //display.invertDisplay(true);
-  loop();
+	loop();
 }
 
 void loop() {
-  int tick;
-  String data;
-  if (Serial.available()) {
-    tick = Serial.read();
-    data = Serial.readStringUntil('\r');
-    disp_up(data, tick);
-  }
+	int tick;
+	String data;
+	if (Serial.available()) tick = Serial.read();
+	else return;
 
-  delay(500);
+	if (Serial.available()) {
+		data = Serial.readStringUntil('\r');
+		disp_up(data);
+	}
+
+	line_up(tick);
+	delay(400);
 }
 
-void disp_up(String data, int tick) {
-  display.clearDisplay();
+void line_up(int tick) {
+	int i, col = tick / 15, row = (tick % 15) * 2;
 
-  display.setTextSize(2);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
-  display.cp437(true);
+	for (i = 0; i < col; i++) display.fillRect(115 + i * 3, 0, 2, 30, SSD1306_WHITE);
+	display.fillRect(115 + col * 3, 0, 2, row, SSD1306_WHITE);
+	display.display();
+}
 
-  display.println(data);
-  if (tick < 31) {
-    display.fillRect(120, 0, 3, tick, SSD1306_WHITE);
-  } else{
-    display.fillRect(120, 0, 3, 30, SSD1306_WHITE);
-    display.fillRect(124, 0, 3, tick - 30, SSD1306_WHITE);
-  }
+void disp_up(String data) {
+	display.clearDisplay();
 
-  display.display();
+	display.setTextSize(2);
+	display.setTextColor(SSD1306_WHITE);
+	display.setCursor(0, 0);
+	display.cp437(true);
+
+	display.println(data);
 }
 
