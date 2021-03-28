@@ -35,7 +35,9 @@ void Chart::graph()
 	double ypp = h1 / (ps.pmax - ps.pmin), yp2 = h2 / 100;
 	double ypv = h2 / (ps.vmax - ps.vmin);
 	double i0;
+	double tmp_y, tmp_y0, tmp_p, tmp_p0;
 	int32_t i;
+	QFont fnt;
 	QGraphicsTextItem *tmp;
 
 	for (i = 20; i < 90; i+=20) {
@@ -91,6 +93,21 @@ void Chart::graph()
 		scn.addLine(i0 - xp, h0 - ps.ph[i-1].rsi * yp2, i0, h0 - ps.ph[i].rsi * yp2, pyellow);
 		scn.addLine(i0 - xp, h0 - (ps.ph[i].volume - ps.vmin) * ypv, i0 - xp, h0, pred);
 	}
+	i--;
+	tmp_p	= ps.ph[i].price;
+	tmp_p0	= ps.ph[i - 1].price;
+	tmp_y	= h1 - (tmp_p - ps.pmin) * ypp;
+	scn.addLine(2, tmp_y, w0 - 2, tmp_y, tmp_p < tmp_p0 ? pred : pgreen);
+
+	tmp = new QGraphicsTextItem();
+	fnt = tmp->font();
+	fnt.setPixelSize(FONT_SZ);
+	tmp->setFont(fnt);
+
+	tmp->setDefaultTextColor(tmp_p < tmp_p0 ? Qt::red : Qt::green);
+	tmp->setPos(w0 - FONT_SZ * 4, std::min(h0 - FONT_SZ, tmp_y + FONT_SZ * 4));
+	tmp->setPlainText(QString::number((int) tmp_p));
+	scn.addItem(tmp);
 }
 
 void Chart::_read_ohlc(QString str)
