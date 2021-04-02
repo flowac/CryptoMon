@@ -94,8 +94,8 @@ App::App()
 	hbox1->setLayout(hlay1);
 
 	vlay1->addWidget(hbox1);
-	cview1->ctype = "1 Hour";
-	cview2->ctype = "5 Minute";
+	cview1->ctype = "None";
+	cview2->ctype = "None";
 	vlay1->addWidget(cview1);
 	vlay1->addWidget(cview2);
 	vbox1->setLayout(vlay1);
@@ -148,6 +148,7 @@ App::App()
 
 void App::_get_depth()
 {
+	if (wdepth) delete wdepth;
 	QString addr = "https://api.kraken.com/0/public/Ticker?pair="
 	+ cview1->ps.name + ","	+ cview2->ps.name;
 //	QString addr = "https://api.kraken.com/0/public/Depth?pair="\
@@ -155,7 +156,6 @@ void App::_get_depth()
 	QUrl url(addr);
 	QNetworkRequest req(url);
 
-	if (wdepth) free(wdepth);
 	wdepth = new Web();
 	wdepth->get(req);
 	connect(wdepth, SIGNAL(read_ok(QString)), this, SLOT(_read_depth(QString)));
@@ -163,13 +163,15 @@ void App::_get_depth()
 
 void App::_get_pair()
 {
+	if (wohlc1) delete wohlc1;
+	if (wohlc2) delete wohlc2;
 	QString pair1 = combo1->itemText(combo1->currentIndex());
 	QString pair2 = combo2->itemText(combo2->currentIndex());
 	tick->setText(QDateTime::currentDateTime().toString());
+	cview1->ctype = pair1;
+	cview2->ctype = pair2;
 ctext->clear();
 
-	if (wohlc1) free(wohlc1);
-	if (wohlc2) free(wohlc2);
 	wohlc1 = new Web();
 	wohlc2 = new Web();
 
@@ -188,6 +190,16 @@ ctext->clear();
 	QNetworkRequest req2(url2);
 	wohlc2->get(req2);
 	connect(wohlc2, SIGNAL(read_ok(QString)), cview2, SLOT(_read_ohlc(QString)));
+}
+
+void App::_quit()
+{
+	_save();
+	LOGF("quit", -1);
+	cview1->resetPS();
+	cview2->resetPS();
+
+	QApplication::quit();
 }
 
 void App::_read_depth(QString str)

@@ -50,7 +50,7 @@
 
 typedef struct PRICE_HISTORY
 {
-	double phi, plo, poc, price, volume, ema, rsi, r30, r50, r70;
+	double phi, plo, poc, price, volume, ema, rsi, r30, r50, r70, rm20, rp20;
 	unsigned char td[TD_LEN];
 	int64_t utime;
 } PH;
@@ -114,13 +114,13 @@ public:
 	void do_calc();
 	void do_last();
 	void graph();
+	void resetPS();
 private slots:
 	void _read_ohlc(QString str);
 private:
 	QBrush bred, bgreen, byellow, bblack, bwhite;
 	QGraphicsScene scn;
 	QPen pred, pgreen, pyellow, pwhite, pgray, pgray2, ppink, pblack;
-	void resetPS();
 };
 
 class App : public QWidget
@@ -133,7 +133,7 @@ private slots:
 	void _fpath(QString str) {fpath->setText(str + ".csv");};
 	void _get_depth();
 	void _get_pair();
-	void _quit() {_save(); LOGF("quit", -1); QApplication::quit();};
+	void _quit();
 	void _read_depth(QString str);
 	void _save(bool clearMark = false);
 	void _time();

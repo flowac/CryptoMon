@@ -88,6 +88,10 @@ void Chart::graph()
 				i0, h1 - (ps.ph[i].r50 - ps.pmin) * ypp, pgray);
 		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r70 - ps.pmin) * ypp,
 				i0, h1 - (ps.ph[i].r70 - ps.pmin) * ypp, pgray);
+		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].rm20 - ps.pmin) * ypp,
+				i0, h1 - (ps.ph[i].rm20 - ps.pmin) * ypp, pyellow);
+		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].rp20 - ps.pmin) * ypp,
+				i0, h1 - (ps.ph[i].rp20 - ps.pmin) * ypp, pyellow);
 
 		//RSI
 		scn.addLine(i0 - xp, h0 - ps.ph[i-1].rsi * yp2, i0, h0 - ps.ph[i].rsi * yp2, pyellow);
@@ -155,13 +159,26 @@ void Chart::_read_ohlc(QString str)
 ERRC:	resetPS();
 }
 
+static inline double r_gain(double target, double rsi1, double rsi2, double gain, double loss, double price)
+{
+	double tmp1 = 100.0 / (100 - target) - 1;
+	double tmp2 = loss * rsi2 / rsi1 * tmp1;
+	return tmp2 * rsi1 + price - gain * rsi2;
+}
+
+static inline double r_loss(double target, double rsi1, double rsi2, double gain, double loss, double price)
+{
+	double tmp1 = 100.0 / (100 - target) - 1;
+	double tmp2 = gain * rsi2 / rsi1 / tmp1;
+	return loss * rsi2 + price - tmp2 * rsi1;
+}
+
 void Chart::do_last()
 {
 	int32_t		i = ps.len - 1;
 	const int	rsi_p = 14;
 	double		prev, price, gain = ps.gain, loss = ps.loss;
-	double		rsi1, rsi2;
-	double		tmp1, tmp2;
+	double		rsi1, rsi2, rm20, rp20;
 
 	if (ps.len == 0) return;
 
@@ -169,7 +186,7 @@ void Chart::do_last()
 	rsi2 = rsi1 - 1;
 
 	prev = ps.ph[i - 1].price;
-	price = ps.ph[i].price;
+	ps.last = price = ps.ph[i].price;
 
 	//Relative Strength Index
 	if (price > prev) {
@@ -179,21 +196,15 @@ void Chart::do_last()
 		gain = gain * rsi2 / rsi1;
 		loss = (loss * rsi2 + prev - price) / rsi1;
 	}
-	ps.ph[i].rsi = loss > 0 ? 100 - 100.0 / (1 + gain / loss) : 100;
-	tmp1 = 100.0 / 70.0 - 1;
-	tmp2 = gain * rsi2 / rsi1 / tmp1;
-	ps.ph[i].r30 = 0 - (tmp2 * rsi1 - price - loss * rsi2);
-	
-	tmp1 = 100.0 / 50.0 - 1;
-	tmp2 = gain * rsi2 / rsi1 / tmp1;
-	ps.ph[i].r50 = 0 - (tmp2 * rsi1 - price - loss * rsi2);
-
-	tmp1 = 100.0 / 30.0 - 1;
-	tmp2 = loss * rsi2 / rsi1 * tmp1;
-	ps.ph[i].r70 = tmp2 * rsi1 + price - gain * rsi2;
-
-	ps.last	= ps.ph[i].price;
-	ps.rsi	= ps.ph[i].rsi;
+	ps.rsi = ps.ph[i].rsi = (loss > 0) ? 100 - 100.0 / (1 + gain / loss) : 100;
+	rm20 = ps.rsi - 20;
+	rp20 = ps.rsi + 20;
+	ps.ph[i].r30 = r_loss(30.0, rsi1, rsi2, gain, loss, price);
+	ps.ph[i].r50 = r_loss(50.0, rsi1, rsi2, gain, loss, price);
+	ps.ph[i].r70 = r_gain(70.0, rsi1, rsi2, gain, loss, price);
+//Note: the signs are wrong on the next two lines, but it gives desired results
+	ps.ph[i].rm20 = (rm20 > 50) ? r_loss(rm20, rsi1, rsi2, gain, loss, price) : r_gain(rm20, rsi1, rsi2, gain, loss, price);
+	ps.ph[i].rp20 = (rp20 < 50) ? r_gain(rp20, rsi1, rsi2, gain, loss, price) : r_loss(rp20, rsi1, rsi2, gain, loss, price);
 
 	graph();
 }
@@ -203,8 +214,8 @@ void Chart::do_calc()
 	int32_t		i;
 	const int	rsi_p = 14;
 	double		prev, price, volume, pxvol;
-	double		ema_v1a, ema_v1b, rsi1, rsi2;
-	double		num, den, gain, loss, tmp1, tmp2;
+	double		ema_v1a, ema_v1b, rsi1, rsi2, rm20, rp20, rtmp;
+	double		num, den, gain, loss;
 
 	rsi1 = rsi_p;
 	rsi2 = rsi1 - 1;
@@ -235,18 +246,16 @@ void Chart::do_calc()
 			gain = gain * rsi2 / rsi1;
 			loss = (loss * rsi2 + prev - price) / rsi1;
 		}
-		ps.ph[i].rsi = loss > 0 ? 100 - 100.0 / (1 + gain / loss) : 100;
-		tmp1 = 100.0 / 70.0 - 1;
-		tmp2 = gain * rsi2 / rsi1 / tmp1;
-		ps.ph[i].r30 = 0 - (tmp2 * rsi1 - price - loss * rsi2);
+		ps.ph[i].rsi = rtmp = (loss > 0) ? 100 - 100.0 / (1 + gain / loss) : 100;
 
-		tmp1 = 100.0 / 50.0 - 1;
-		tmp2 = gain * rsi2 / rsi1 / tmp1;
-		ps.ph[i].r50 = 0 - (tmp2 * rsi1 - price - loss * rsi2);
-
-		tmp1 = 100.0 / 30.0 - 1;
-		tmp2 = loss * rsi2 / rsi1 * tmp1;
-		ps.ph[i].r70 = tmp2 * rsi1 + price - gain * rsi2;
+		rm20 = rtmp - 20;
+		rp20 = rtmp + 20;
+		ps.ph[i].r30 = r_loss(30.0, rsi1, rsi2, gain, loss, price);
+		ps.ph[i].r50 = r_loss(50.0, rsi1, rsi2, gain, loss, price);
+		ps.ph[i].r70 = r_gain(70.0, rsi1, rsi2, gain, loss, price);
+//Note: the signs are wrong on the next two lines, but it gives desired results
+		ps.ph[i].rm20 = (rm20 > 50) ? r_loss(rm20, rsi1, rsi2, gain, loss, price) : r_gain(rm20, rsi1, rsi2, gain, loss, price);
+		ps.ph[i].rp20 = (rp20 < 50) ? r_gain(rp20, rsi1, rsi2, gain, loss, price) : r_loss(rp20, rsi1, rsi2, gain, loss, price);
 
 		prev = price;
 		if (i < XOFFSET) continue;

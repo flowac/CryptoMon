@@ -38,7 +38,7 @@ void Overlay::paintEvent(QPaintEvent *)
 	int i, mx = mpos.x(), my = mpos.y(), ly, xp;
 	char buf[BUF_200];
 	double h1 = h0 * ps->div1, h1b = h1 + FONT_SZ - 2;
-	double w0 = width(), w1 = (mx > w0 * 0.7) ? mx - FONT_SZ * 10 : mx + 3;
+	double w0 = width(), w1 = (mx > w0 * 0.8) ? mx - FONT_SZ * 10 : mx + 3;
 	double percent, price, target;
 	QFont fnt;
 	QPainter pnt;
@@ -62,14 +62,15 @@ void Overlay::paintEvent(QPaintEvent *)
 	pnt.drawText(w1, FONT_SZ * 2, buf);
 
 	pnt.setPen(pyellow);
-	snprintf(buf, BUF_200, "%.2f, %.2f", ps->ph[xp].rsi, ps->ph[xp].r30);
+	snprintf(buf, BUF_200, "RSI: %.1f, 30: %.0f", ps->ph[xp].rsi, ps->ph[xp].r30);
 	pnt.drawText(w1, h1b, buf);
 	pnt.setPen(pyellow);
-	snprintf(buf, BUF_200, "%.2f, %.2f", ps->ph[xp].r50, ps->ph[xp].r70);
+	snprintf(buf, BUF_200, "50: %.0f, 70: %.0f", ps->ph[xp].r50, ps->ph[xp].r70);
 	pnt.drawText(w1, h1b + FONT_SZ, buf);
-	pnt.setPen(pred);
-	snprintf(buf, BUF_200, "%.1f", ps->ph[xp].volume);
+	snprintf(buf, BUF_200, "-/+20: %.0f, %.0f", ps->ph[xp].rm20, ps->ph[xp].rp20);
 	pnt.drawText(w1, h1b + FONT_SZ * 2, buf);
+	snprintf(buf, BUF_200, "Volume: %.1f", ps->ph[xp].volume);
+	pnt.drawText(w1, h1b + FONT_SZ * 3, buf);
 	pnt.setPen(pwhite);
 
 	target = ps->pmin + (h1 - my) / h1 * (ps->pmax - ps->pmin);

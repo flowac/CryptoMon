@@ -2,6 +2,7 @@
 
 void Web::get(QNetworkRequest req)
 {
+//Note: make the manager static or delete it once reply is read.
 	QNetworkAccessManager *mgr = new QNetworkAccessManager(this);
 	mgr->get(req);
 	connect(mgr, SIGNAL(finished(QNetworkReply *)), this, SLOT(_read(QNetworkReply *)));
