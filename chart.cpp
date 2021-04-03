@@ -27,7 +27,13 @@ Chart::Chart(QWidget *p):QGraphicsView(p)
 
 void Chart::graph()
 {
+	while (n_items > 0) {
+		n_items--;
+		if (g_items[n_items]) delete g_items[n_items];
+		g_items[n_items] = 0;
+	}
 	scn.clear();
+
 	if (ps.len == 0) return;
 	double w0 = width();
 	double h0 = height(), h1 = h0 * ps.div1, h2 = h0 * ps.div2;
@@ -35,9 +41,7 @@ void Chart::graph()
 	double ypp = h1 / (ps.pmax - ps.pmin), yp2 = h2 / 100;
 	double ypv = h2 / (ps.vmax - ps.vmin);
 	double i0;
-	double tmp_y, tmp_y0, tmp_p, tmp_p0;
 	int32_t i;
-	QFont fnt;
 	QGraphicsTextItem *tmp;
 
 	for (i = 20; i < 90; i+=20) {
@@ -45,6 +49,7 @@ void Chart::graph()
 
 		//Volume
 		tmp = new QGraphicsTextItem();
+		g_items[n_items++] = tmp;
 		tmp->setDefaultTextColor(Qt::gray);
 		tmp->setPos(w0 - 18, h0 - yp2 * i);
 		tmp->setPlainText(QString::number(i));
@@ -52,18 +57,21 @@ void Chart::graph()
 	}
 
 	tmp = new QGraphicsTextItem();
+	g_items[n_items++] = tmp;
 	tmp->setDefaultTextColor(Qt::white);
 	tmp->setPos(w0 - FONT_SZ, h0 - yp2 * i);
 	tmp->setPlainText("RSI");
 	scn.addItem(tmp);
 
 	tmp = new QGraphicsTextItem();
+	g_items[n_items++] = tmp;
 	tmp->setDefaultTextColor(Qt::white);
 	tmp->setPos(2, h0 - yp2 * i);
 	tmp->setPlainText("Volume");
 	scn.addItem(tmp);
 
 	tmp = new QGraphicsTextItem();
+	g_items[n_items++] = tmp;
 	tmp->setDefaultTextColor(Qt::white);
 	tmp->setPos(2, 2);
 	tmp->setPlainText(ctype);
@@ -97,21 +105,6 @@ void Chart::graph()
 		scn.addLine(i0 - xp, h0 - ps.ph[i-1].rsi * yp2, i0, h0 - ps.ph[i].rsi * yp2, pyellow);
 		scn.addLine(i0 - xp, h0 - (ps.ph[i].volume - ps.vmin) * ypv, i0 - xp, h0, pred);
 	}
-	i--;
-	tmp_p	= ps.ph[i].price;
-	tmp_p0	= ps.ph[i - 1].price;
-	tmp_y	= h1 - (tmp_p - ps.pmin) * ypp;
-	scn.addLine(2, tmp_y, w0 - 2, tmp_y, tmp_p < tmp_p0 ? pred : pgreen);
-
-	tmp = new QGraphicsTextItem();
-	fnt = tmp->font();
-	fnt.setPixelSize(FONT_SZ);
-	tmp->setFont(fnt);
-
-	tmp->setDefaultTextColor(tmp_p < tmp_p0 ? Qt::red : Qt::green);
-	tmp->setPos(w0 - FONT_SZ * 4, std::min(h0 - FONT_SZ, tmp_y + FONT_SZ * 4));
-	tmp->setPlainText(QString::number((int) tmp_p));
-	scn.addItem(tmp);
 }
 
 void Chart::_read_ohlc(QString str)
@@ -122,6 +115,7 @@ void Chart::_read_ohlc(QString str)
 	QJsonDocument	jdoc;
 	QJsonObject	jobj;
 	QJsonValue	jval;
+	QString		dstr;
 
 	resetPS();
 	jdoc = QJsonDocument::fromJson((str).toUtf8());
@@ -130,12 +124,14 @@ void Chart::_read_ohlc(QString str)
 
 	if ((jval = jobj["result"]) == QJsonValue::Undefined) goto ERRC;
 	jobj = jval.toObject();
-//	ctext->append(jobj.keys().join("-"));
+	dstr = jobj.keys().join("-");
+//	LOGF(str.toStdString().c_str(), 1);
 
 	if ((jval = jobj[ps.name]) == QJsonValue::Undefined) goto ERRC;
 	jarr = jval.toArray();
 	ps.len = jarr.size();
-//	ctext->append(QString("List length:")+QString::number(ps.len));
+	dstr = QString("List length:") + QString::number(ps.len);
+//	LOGF(str.toStdString().c_str());
 	if (ps.len < XOFFSET) goto ERRC;
 
 	jidx = jarr[0].toArray();
@@ -176,14 +172,10 @@ static inline double r_loss(double target, double rsi1, double rsi2, double gain
 void Chart::do_last()
 {
 	int32_t		i = ps.len - 1;
-	const int	rsi_p = 14;
+	const double	rsi1 = 14, rsi2 = rsi1 - 1;
 	double		prev, price, gain = ps.gain, loss = ps.loss;
-	double		rsi1, rsi2, rm20, rp20;
 
 	if (ps.len == 0) return;
-
-	rsi1 = rsi_p;
-	rsi2 = rsi1 - 1;
 
 	prev = ps.ph[i - 1].price;
 	ps.last = price = ps.ph[i].price;
@@ -197,16 +189,11 @@ void Chart::do_last()
 		loss = (loss * rsi2 + prev - price) / rsi1;
 	}
 	ps.rsi = ps.ph[i].rsi = (loss > 0) ? 100 - 100.0 / (1 + gain / loss) : 100;
-	rm20 = ps.rsi - 20;
-	rp20 = ps.rsi + 20;
 	ps.ph[i].r30 = r_loss(30.0, rsi1, rsi2, gain, loss, price);
 	ps.ph[i].r50 = r_loss(50.0, rsi1, rsi2, gain, loss, price);
 	ps.ph[i].r70 = r_gain(70.0, rsi1, rsi2, gain, loss, price);
-//Note: the signs are wrong on the next two lines, but it gives desired results
-	ps.ph[i].rm20 = (rm20 > 50) ? r_loss(rm20, rsi1, rsi2, gain, loss, price) : r_gain(rm20, rsi1, rsi2, gain, loss, price);
-	ps.ph[i].rp20 = (rp20 < 50) ? r_gain(rp20, rsi1, rsi2, gain, loss, price) : r_loss(rp20, rsi1, rsi2, gain, loss, price);
 
-	graph();
+	ov->update();
 }
 
 void Chart::do_calc()
@@ -248,14 +235,21 @@ void Chart::do_calc()
 		}
 		ps.ph[i].rsi = rtmp = (loss > 0) ? 100 - 100.0 / (1 + gain / loss) : 100;
 
-		rm20 = rtmp - 20;
-		rp20 = rtmp + 20;
+		//Use a graphing calculator to tweak these four formulas
+		if (rtmp > 50) {
+			rm20 = rtmp - 20;
+			rp20 = rtmp * 0.3 + 55;
+		} else {
+			rm20 = rtmp * 0.3 + 15;
+			rp20 = rtmp + 20;
+		}
+
 		ps.ph[i].r30 = r_loss(30.0, rsi1, rsi2, gain, loss, price);
 		ps.ph[i].r50 = r_loss(50.0, rsi1, rsi2, gain, loss, price);
 		ps.ph[i].r70 = r_gain(70.0, rsi1, rsi2, gain, loss, price);
-//Note: the signs are wrong on the next two lines, but it gives desired results
-		ps.ph[i].rm20 = (rm20 > 50) ? r_loss(rm20, rsi1, rsi2, gain, loss, price) : r_gain(rm20, rsi1, rsi2, gain, loss, price);
-		ps.ph[i].rp20 = (rp20 < 50) ? r_gain(rp20, rsi1, rsi2, gain, loss, price) : r_loss(rp20, rsi1, rsi2, gain, loss, price);
+
+		ps.ph[i].rm20 = (rm20 < 50) ? r_loss(rm20, rsi1, rsi2, gain, loss, price) : r_gain(rm20, rsi1, rsi2, gain, loss, price);
+		ps.ph[i].rp20 = (rp20 > 50) ? r_gain(rp20, rsi1, rsi2, gain, loss, price) : r_loss(rp20, rsi1, rsi2, gain, loss, price);
 
 		prev = price;
 		if (i < XOFFSET) continue;
@@ -276,6 +270,7 @@ void Chart::do_calc()
 	ps.pmax = ceil((ps.pmax + (ps.pmax - ps.pmin) * 0.04) / 10.0) * 10;
 
 	graph();
+	ov->update();
 }
 
 void Chart::resetPS()

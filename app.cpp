@@ -6,6 +6,7 @@ App::App()
 	QBrush brush(QColor(0,0,0), Qt::SolidPattern);
 	QPalette cback = QPalette(QPalette::Background, Qt::black);
 	QSizePolicy szpol = QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	QLabel *site = new QLabel("Source: 1btc.win", this);
 	QTimer *systimer = new QTimer(this);
 	QPushButton *but1, *but2, *but4;
 	QWidget *hbox1, *vbox1;
@@ -59,6 +60,8 @@ App::App()
 	syst->setAlignment(Qt::AlignCenter);
 	tick->setFixedWidth(TAB_H*15);
 	tick->setAlignment(Qt::AlignCenter);
+	site->setFixedWidth(TAB_H*6);
+	site->setAlignment(Qt::AlignCenter);
 
 	but1->setSizePolicy(szpol);
 	but2->setSizePolicy(szpol);
@@ -81,6 +84,7 @@ App::App()
 //	fpath->setStyleSheet(css1);
 	syst->setStyleSheet(css3);
 	tick->setStyleSheet(css3);
+	site->setStyleSheet(css3);
 
 	hlay1->addWidget(but1);
 	hlay1->addWidget(combo1);
@@ -89,6 +93,7 @@ App::App()
 //	hlay1->addWidget(but3);
 //	hlay1->addWidget(fpath);
 	hlay1->addWidget(but4);
+	hlay1->addWidget(site);
 	hlay1->addWidget(tick);
 	hlay1->addWidget(syst);
 	hbox1->setLayout(hlay1);
@@ -117,19 +122,6 @@ App::App()
 	combo2->setInsertPolicy(QComboBox::InsertAtTop);
 //	fpath->setText(combo->currentText() + ".csv");
 
-/*	but1->setFocusPolicy(Qt::NoFocus);
-	but2->setFocusPolicy(Qt::NoFocus);
-	but4->setFocusPolicy(Qt::NoFocus);
-//	ctext->setFocusPolicy(Qt::NoFocus);
-	cview1->setFocusPolicy(Qt::NoFocus);
-	cview2->setFocusPolicy(Qt::NoFocus);
-	combo->setFocusPolicy(Qt::NoFocus);
-	fpath->setFocusPolicy(Qt::NoFocus);
-	syst->setFocusPolicy(Qt::NoFocus);
-	tick->setFocusPolicy(Qt::NoFocus);
-	hbox1->setFocusPolicy(Qt::NoFocus);
-	this->setFocusPolicy(Qt::NoFocus);
-*/
 	connect(but1, SIGNAL(released()), this, SLOT(_quit()));
 	connect(but2, SIGNAL(released()), this, SLOT(_get_pair()));
 //	connect(but3, SIGNAL(released()), this, SLOT();
@@ -172,14 +164,12 @@ void App::_get_pair()
 	cview2->ctype = pair2;
 ctext->clear();
 
-	wohlc1 = new Web();
-	wohlc2 = new Web();
-
 	cview1->ps.name = pair1;
 	QString addr1 = "https://api.kraken.com/0/public/OHLC?pair=" + pair1 + "&interval=60&since="
 		+ QString::number(QDateTime::currentSecsSinceEpoch() - 60 * 60 * 300);
 	QUrl url1(addr1);
 	QNetworkRequest req1(url1);
+	wohlc1 = new Web();
 	wohlc1->get(req1);
 	connect(wohlc1, SIGNAL(read_ok(QString)), cview1, SLOT(_read_ohlc(QString)));
 
@@ -188,6 +178,7 @@ ctext->clear();
 		+ QString::number(QDateTime::currentSecsSinceEpoch() - 60 * 60 * 300);
 	QUrl url2(addr2);
 	QNetworkRequest req2(url2);
+	wohlc2 = new Web();
 	wohlc2->get(req2);
 	connect(wohlc2, SIGNAL(read_ok(QString)), cview2, SLOT(_read_ohlc(QString)));
 }
@@ -229,7 +220,7 @@ void App::_read_depth(QString str)
 	jarr = jval.toArray();
 	cview2->ps.ph[cview2->ps.len-1].price = jarr[0].toString().toDouble() * (cview2->ps.mult);
 ctext->append(QString::number(cview1->ps.ph[cview1->ps.len-1].price)
-	+" "+ QString::number(cview2->ps.ph[cview2->ps.len-1].price));
+	+"\t"+ QString::number(cview2->ps.ph[cview2->ps.len-1].price));
 
 	cview1->do_last();
 	cview2->do_last();
@@ -285,5 +276,5 @@ void App::resizeEvent(QResizeEvent *evt) {
 	cview2->graph();
 	cview2->ov->resize(cview2->size());
 	QWidget::resizeEvent(evt);
-};
+}
 

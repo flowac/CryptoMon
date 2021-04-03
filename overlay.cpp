@@ -40,6 +40,7 @@ void Overlay::paintEvent(QPaintEvent *)
 	double h1 = h0 * ps->div1, h1b = h1 + FONT_SZ - 2;
 	double w0 = width(), w1 = (mx > w0 * 0.8) ? mx - FONT_SZ * 10 : mx + 3;
 	double percent, price, target;
+	double pcord = h1 - (ps->last - ps->pmin) * (h1 / (ps->pmax - ps->pmin));
 	QFont fnt;
 	QPainter pnt;
 
@@ -76,7 +77,7 @@ void Overlay::paintEvent(QPaintEvent *)
 	target = ps->pmin + (h1 - my) / h1 * (ps->pmax - ps->pmin);
 	percent = (target - price) * 100 / price;
 	snprintf(buf, BUF_200, "%.0f  %.2f%%", target, percent);
-	pnt.drawText(w1, std::max(FONT_SZ * 3, std::min(my, (int)h1 - 2)), buf);
+	pnt.drawText(w1, std::max(FONT_SZ * 3, std::min(my, (int)h1 - FONT_SZ - 2)), buf);
 
 HIDE:	for (i = 0; i < std::min(nlock, maxlock); i++) {
 		ly = h1 - (ylock[i] - ps->pmin) * h1 / (ps->pmax - ps->pmin);
@@ -84,6 +85,10 @@ HIDE:	for (i = 0; i < std::min(nlock, maxlock); i++) {
 		snprintf(buf, BUF_200, "%d", ylock[i]);
 		pnt.drawText(1, ly + FONT_SZ, buf);
 	}
+	pnt.setPen(ps->last < ps->ph[ps->len-2].price ? Qt::red : Qt::green);
+	snprintf(buf, BUF_200, "%.0f  %.1f", ps->last, ps->rsi);
+	pnt.drawText(w0 - FONT_SZ * 6, h1 - 2, buf);
+	pnt.drawLine(1, pcord, w0 - 1, pcord);
 	pnt.end();
 }
 

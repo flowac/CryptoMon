@@ -75,9 +75,12 @@ public:
 	void get(QNetworkRequest req);
 	void post(QNetworkRequest req, QByteArray data);
 signals:
-	void read_ok(QString out);
+	void read_ok(QString str);
 private slots:
+	void _delete_reply(QNetworkReply *ret) {delete ret; delete mgr;};
 	void _read(QNetworkReply *ret);
+private:
+	QNetworkAccessManager *mgr;
 };
 
 class Overlay : public QWidget
@@ -95,7 +98,8 @@ private:
 	double precision = 100.0;
 	PS *ps;
 	QPoint mpos, gpos;
-	QPen pred = QPen(Qt::red, 1), pwhite = QPen(Qt::white, 1), pyellow = QPen(Qt::yellow, 1);
+	QPen pred = QPen(Qt::red, 1), pgreen = QPen(Qt::green, 1);
+	QPen pwhite = QPen(Qt::white, 1), pyellow = QPen(Qt::yellow, 1);
 	void paintEvent(QPaintEvent *);
 	void keyPressEvent(QKeyEvent *evt);
 	void keyReleaseEvent(QKeyEvent *evt);
@@ -118,9 +122,11 @@ public:
 private slots:
 	void _read_ohlc(QString str);
 private:
+	int32_t n_items = 0;
 	QBrush bred, bgreen, byellow, bblack, bwhite;
 	QGraphicsScene scn;
 	QPen pred, pgreen, pyellow, pwhite, pgray, pgray2, ppink, pblack;
+	QGraphicsTextItem *g_items[10];
 };
 
 class App : public QWidget
