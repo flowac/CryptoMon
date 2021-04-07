@@ -25,7 +25,7 @@ Chart::Chart(QWidget *p):QGraphicsView(p)
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
-void Chart::graph()
+void Chart::clear()
 {
 	while (n_items > 0) {
 		n_items--;
@@ -33,7 +33,12 @@ void Chart::graph()
 		g_items[n_items] = 0;
 	}
 	scn.clear();
+	resetCachedContent();
+}
 
+void Chart::graph()
+{
+	clear();
 	if (ps.len == 0) return;
 	double w0 = width();
 	double h0 = height(), h1 = h0 * ps.div1, h2 = h0 * ps.div2;
@@ -103,7 +108,8 @@ void Chart::graph()
 
 		//RSI
 		scn.addLine(i0 - xp, h0 - ps.ph[i-1].rsi * yp2, i0, h0 - ps.ph[i].rsi * yp2, pyellow);
-		scn.addLine(i0 - xp, h0 - (ps.ph[i].volume - ps.vmin) * ypv, i0 - xp, h0, pred);
+		scn.addLine(i0 - xp, h0 - (ps.ph[i].volume - ps.vmin) * ypv, i0 - xp, h0,
+				ps.ph[i].price < ps.ph[i-1].price ? pred : pgreen);
 	}
 }
 
@@ -149,6 +155,8 @@ void Chart::_read_ohlc(QString str)
 		ps.ph[i].volume	= jidx[6].toString().toDouble();
 		if (ps.ph[i].price == 0) ps.ph[i].price = ps.ph[i].poc;
 	}
+
+	str.clear();
 	do_calc();
 	return;
 

@@ -4,6 +4,7 @@
 #include <Adafruit_SSD1306.h>
 
 Adafruit_SSD1306 display(128, 32, &Wire, 4);
+int idle = 0;
 
 void setup() {
 	Serial.begin(9600);
@@ -18,15 +19,22 @@ void setup() {
 void loop() {
 	int tick;
 	String data;
-	if (Serial.available()) tick = Serial.read();
-	else return;
-
 	if (Serial.available()) {
-		data = Serial.readStringUntil('\r');
-		disp_up(data);
+		idle = 0;
+		tick = Serial.read();
+		if (Serial.available()) {
+			data = Serial.readStringUntil('\r');
+			disp_up(data);
+		}
+		line_up(tick);
+	} else {
+		idle++;
+		if (idle > 10) {
+			display.clearDisplay();
+			display.display();
+			delay(5000);
+		}
 	}
-
-	line_up(tick);
 	delay(400);
 }
 

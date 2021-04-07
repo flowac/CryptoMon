@@ -187,8 +187,13 @@ void App::_quit()
 {
 	_save();
 	LOGF("quit", -1);
+	cview1->clear();
+	cview2->clear();
 	cview1->resetPS();
 	cview2->resetPS();
+	if (wdepth) delete wdepth;
+	if (wohlc1) delete wohlc1;
+	if (wohlc2) delete wohlc2;
 
 	QApplication::quit();
 }
@@ -222,6 +227,7 @@ void App::_read_depth(QString str)
 ctext->append(QString::number(cview1->ps.ph[cview1->ps.len-1].price)
 	+"\t"+ QString::number(cview2->ps.ph[cview2->ps.len-1].price));
 
+	str.clear();
 	cview1->do_last();
 	cview2->do_last();
 

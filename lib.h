@@ -115,6 +115,7 @@ public:
 	QString ctype = "";
 	Overlay *ov;
 	Chart(QWidget *p);
+	void clear();
 	void do_calc();
 	void do_last();
 	void graph();
