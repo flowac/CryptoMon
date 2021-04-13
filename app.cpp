@@ -259,21 +259,10 @@ ERRC:	ctext->append("Save error");
 
 void App::_time()
 {
-	char buf[BUF_80];
 	qint64 utime = QDateTime::currentSecsSinceEpoch() % (15 * 60);
 	syst->setText(QDateTime::currentDateTime().toString());
 	if (utime == 0) _get_pair();
 	else if (utime % 5 == 0) _get_depth();
-
-	utime %= 60;
-	if ((utime + 2) % 5 == 0) {
-		snprintf(buf, BUF_80, "%c%5d  %2d\n%5d  %2d\r", (char) utime,
-			(int) cview1->ps.last, (int) cview1->ps.rsi,
-			(int) cview2->ps.last, (int) cview2->ps.rsi);
-	} else	snprintf(buf, BUF_80, "%c", (char) utime);
-
-	SEND(buf);
-//	LOGF(buf);
 }
 
 void App::resizeEvent(QResizeEvent *evt) {

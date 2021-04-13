@@ -34,8 +34,6 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QRegularExpression>
-#include <QSerialPort>
-#include <QSerialPortInfo>
 #include <QTextStream>
 #include <QTimer>
 
@@ -66,7 +64,6 @@ typedef struct PRICE_SUMMARY
 } PS;
 
 void LOGF(const char *str, int level = 0);
-void SEND(const char *str);
 
 class Web : public QObject
 {

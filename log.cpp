@@ -21,36 +21,3 @@ void LOGF(const char *str, int level)
 	}
 }
 
-//Note: First byte determines the height of the rectangle
-void SEND(const char *str)
-{
-	static bool _INIT_ = false;
-	static bool _STAT_ = true;
-	static QSerialPort sp;
-
-	if (! _INIT_) {
-		char str[BUF_80];
-		QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
-		while (!ports.isEmpty()) {
-			QSerialPortInfo tp = ports.takeFirst();
-			if (_STAT_) {
-				snprintf(str, BUF_80, "COM: %u %u %s", tp.productIdentifier(),
-					tp.vendorIdentifier(), tp.portName().toLocal8Bit().data());
-				LOGF(str);
-				_STAT_ = false;
-			}
-
-			if (tp.vendorIdentifier() != 9025) continue;
-			LOGF("SETTING SERIAL PORT: ", 1);
-			sp.setPort(tp);
-			sp.setPortName(tp.portName());
-			sp.setBaudRate(9600);
-			_INIT_ = sp.open(QIODevice::ReadWrite);
-			if (_INIT_) LOGF("SUCCESS");
-			else LOGF("FAIL");
-			break;
-		}
-	}
-	if (!sp.write(str)) LOGF("Serial write failed");
-}
-
