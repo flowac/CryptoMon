@@ -46,7 +46,7 @@ void Chart::graph()
 	double ypp = h1 / (ps.pmax - ps.pmin), yp2 = h2 / 100;
 	double ypv = h2 / (ps.vmax - ps.vmin);
 	double i0;
-	int32_t i;
+	int32_t i, path;
 	QGraphicsTextItem *tmp;
 
 	for (i = 20; i < 90; i+=20) {
@@ -95,12 +95,36 @@ void Chart::graph()
 				i0 + 3, h1 - (ps.ph[i].price - ps.pmin) * ypp, pyellow);
 //		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].price * 0.95 - ps.pmin) * ypp,
 //				i0, h1 - (ps.ph[i].price * 0.95 - ps.pmin) * ypp, pgray2);
-		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r30 - ps.pmin) * ypp,
-				i0, h1 - (ps.ph[i].r30 - ps.pmin) * ypp, pgray);
+
 		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r50 - ps.pmin) * ypp,
 				i0, h1 - (ps.ph[i].r50 - ps.pmin) * ypp, pgray);
-		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r70 - ps.pmin) * ypp,
-				i0, h1 - (ps.ph[i].r70 - ps.pmin) * ypp, pgray);
+
+		path = 0;
+		if (ps.ph[i].r30 < ps.ph[i].rm20)	path+=1;
+		if (ps.ph[i-1].r30 < ps.ph[i-1].rm20)	path+=2;
+		switch (path) {
+		case 1: scn.addLine(i0 - xp, h1 - (ps.ph[i-1].rm20 - ps.pmin) * ypp,
+				i0, h1 - (ps.ph[i].r30 - ps.pmin) * ypp, pgray); break;
+		case 2: scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r30 - ps.pmin) * ypp,
+				i0, h1 - (ps.ph[i].rm20 - ps.pmin) * ypp, pgray); break;
+		case 3: scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r30 - ps.pmin) * ypp,
+				i0, h1 - (ps.ph[i].r30 - ps.pmin) * ypp, pgray); break;
+		default:break;
+		}
+
+		path = 0;
+		if (ps.ph[i].r70 > ps.ph[i].rp20)	path+=1;
+		if (ps.ph[i-1].r70 > ps.ph[i-1].rp20)	path+=2;
+		switch (path) {
+		case 1: scn.addLine(i0 - xp, h1 - (ps.ph[i-1].rp20 - ps.pmin) * ypp,
+				i0, h1 - (ps.ph[i].r70 - ps.pmin) * ypp, pgray); break;
+		case 2: scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r70 - ps.pmin) * ypp,
+				i0, h1 - (ps.ph[i].rp20 - ps.pmin) * ypp, pgray); break;
+		case 3: scn.addLine(i0 - xp, h1 - (ps.ph[i-1].r70 - ps.pmin) * ypp,
+				i0, h1 - (ps.ph[i].r70 - ps.pmin) * ypp, pgray); break;
+		default:break;
+		}
+
 		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].rm20 - ps.pmin) * ypp,
 				i0, h1 - (ps.ph[i].rm20 - ps.pmin) * ypp, pyellow);
 		scn.addLine(i0 - xp, h1 - (ps.ph[i-1].rp20 - ps.pmin) * ypp,
