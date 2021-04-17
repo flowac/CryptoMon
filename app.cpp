@@ -284,11 +284,6 @@ void App::_time()
 	syst->setText(QDateTime::currentDateTime().toString());
 	if (utime == 0) _get_pair();
 	else if (utime % 6 == 0) _get_depth();
-	else {
-//TODO: Remove this hack
-		cview1->ov->update();
-		cview2->ov->update();
-	}
 }
 
 void App::resizeEvent(QResizeEvent *evt) {

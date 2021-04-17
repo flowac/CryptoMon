@@ -230,6 +230,7 @@ void Chart::do_last()
 
 void Chart::do_calc()
 {
+	char		buf[BUF_80];
 	int32_t		i;
 	const int	rsi_p = 14;
 	double		prev, price, volume, pxvol;
@@ -295,11 +296,14 @@ void Chart::do_calc()
 		ps.vmin = std::min(ps.vmin, ps.ph[i].volume);
 	}
 
-	ps.last	= ps.ph[i].price;
-	ps.rsi	= ps.ph[i].rsi;
+	ps.last	= ps.ph[ps.len-1].price;
+	ps.rsi	= ps.ph[ps.len-1].rsi;
 
 	ps.pmin = ceil(ps.pmin / 10) * 10;
 	ps.pmax = ceil((ps.pmax + (ps.pmax - ps.pmin) * 0.04) / 10.0) * 10;
+
+	snprintf(buf, BUF_80, "%s   Price: %f   RSI: %f", ps.name.toStdString().c_str(), ps.last, ps.rsi);
+	LOGF(buf);
 
 	graph();
 	ov->update();
