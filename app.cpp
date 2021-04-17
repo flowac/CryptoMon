@@ -200,6 +200,7 @@ void App::_quit()
 
 void App::_read_depth(QString str)
 {
+	char		buf[BUF_80];
 	QJsonArray	jarr;
 	QJsonDocument	jdoc;
 	QJsonObject	jobj, jp1, jp2;
@@ -224,10 +225,14 @@ void App::_read_depth(QString str)
 	if ((jval = jp2["c"]) == QJsonValue::Undefined) goto ERRC;
 	jarr = jval.toArray();
 	cview2->ps.ph[cview2->ps.len-1].price = jarr[0].toString().toDouble() * (cview2->ps.mult);
-ctext->append(QString::number(cview1->ps.ph[cview1->ps.len-1].price)
-	+"\t"+ QString::number(cview2->ps.ph[cview2->ps.len-1].price));
 
+	snprintf(buf, BUF_80, "%.0f %.1f %.0f %.1f",
+		cview1->ps.ph[cview1->ps.len-1].price, cview1->ps.ph[cview1->ps.len-1].rsi,
+		cview2->ps.ph[cview2->ps.len-1].price, cview2->ps.ph[cview2->ps.len-1].rsi);
+	ctext->append(buf);
+	LOGF(buf, 2);
 	str.clear();
+
 	cview1->do_last();
 	cview2->do_last();
 
@@ -237,8 +242,6 @@ ERRC:	return;
 void App::_save(bool clearMark)
 {
 /*
-	const int	blen = 300;
-	char		buf[blen];
 	int32_t		i;
 	PH		*tmp;
 	QFile		fout(fpath->text());
