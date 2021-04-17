@@ -6,7 +6,7 @@ App::App()
 	QBrush brush(QColor(0,0,0), Qt::SolidPattern);
 	QPalette cback = QPalette(QPalette::Background, Qt::black);
 	QSizePolicy szpol = QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	QLabel *site = new QLabel("Source: 1btc.win", this);
+	QLabel *site = new QLabel("1btc.win", this);
 	QTimer *systimer = new QTimer(this);
 	QPushButton *but1, *but2, *but4;
 	QWidget *hbox1, *vbox1;
@@ -31,6 +31,8 @@ App::App()
 	hlay1	= new QHBoxLayout(hbox1);
 	combo1	= new QComboBox(hbox1);
 	combo2	= new QComboBox(hbox1);
+	period1	= new QLineEdit("60", hbox1);
+	period2	= new QLineEdit("60", hbox1);
 	syst	= new QLabel(QDateTime::currentDateTime().toString(), hbox1);
 	tick	= new QLabel(hbox1);
 //	fpath	= new QLineEdit(hbox1);
@@ -52,15 +54,17 @@ App::App()
 	but2->setFixedWidth(TAB_H*4);
 //	but3->setFixedWidth(TAB_H*4);
 	but4->setFixedWidth(TAB_H*4);
-	combo1->setFixedWidth(TAB_H*5);
-	combo2->setFixedWidth(TAB_H*5);
+	combo1->setFixedWidth(TAB_H*6);
+	combo2->setFixedWidth(TAB_H*6);
+	period1->setFixedWidth(TAB_H*2);
+	period2->setFixedWidth(TAB_H*2);
 	ctext->setFixedWidth(FONT_SZ*10);
 //	fpath->setFixedWidth(TAB_H*6);
-	syst->setFixedWidth(TAB_H*12);
+	syst->setFixedWidth(TAB_H*11);
 	syst->setAlignment(Qt::AlignCenter);
-	tick->setFixedWidth(TAB_H*15);
+	tick->setFixedWidth(TAB_H*11);
 	tick->setAlignment(Qt::AlignCenter);
-	site->setFixedWidth(TAB_H*6);
+	site->setFixedWidth(TAB_H*3);
 	site->setAlignment(Qt::AlignCenter);
 
 	but1->setSizePolicy(szpol);
@@ -71,6 +75,8 @@ App::App()
 	cview2->setSizePolicy(szpol);
 	combo1->setSizePolicy(szpol);
 	combo2->setSizePolicy(szpol);
+	period1->setSizePolicy(szpol);
+	period2->setSizePolicy(szpol);
 //	fpath->setSizePolicy(szpol);
 	but1->setStyleSheet(css1);
 	but2->setStyleSheet(css1);
@@ -81,6 +87,8 @@ App::App()
 	cview2->setStyleSheet(css3);
 	combo1->setStyleSheet(css1);
 	combo2->setStyleSheet(css1);
+	period1->setStyleSheet(css1);
+	period2->setStyleSheet(css1);
 //	fpath->setStyleSheet(css1);
 	syst->setStyleSheet(css3);
 	tick->setStyleSheet(css3);
@@ -88,7 +96,9 @@ App::App()
 
 	hlay1->addWidget(but1);
 	hlay1->addWidget(combo1);
+	hlay1->addWidget(period1);
 	hlay1->addWidget(combo2);
+	hlay1->addWidget(period2);
 	hlay1->addWidget(but2);
 //	hlay1->addWidget(but3);
 //	hlay1->addWidget(fpath);
@@ -109,14 +119,15 @@ App::App()
 	hlay2->addWidget(vbox1);
 
 	combo1->addItem("XXBTZUSD");
+	combo1->addItem("XETHXXBT");
 	combo1->addItem("XETHZUSD");
-	combo1->addItem("XXBTZEUR");
 	combo1->addItem("");
 	combo1->setEditable(true);
 	combo1->setInsertPolicy(QComboBox::InsertAtTop);
 
 	combo2->addItem("XETHXXBT");
 	combo2->addItem("XETHZUSD");
+	combo2->addItem("XXBTZUSD");
 	combo2->addItem("");
 	combo2->setEditable(true);
 	combo2->setInsertPolicy(QComboBox::InsertAtTop);
@@ -157,16 +168,19 @@ void App::_get_pair()
 {
 	if (wohlc1) delete wohlc1;
 	if (wohlc2) delete wohlc2;
+	int pn1 = period1->text().toInt(), pn2 = period2->text().toInt();
 	QString pair1 = combo1->itemText(combo1->currentIndex());
 	QString pair2 = combo2->itemText(combo2->currentIndex());
 	tick->setText(QDateTime::currentDateTime().toString());
-	cview1->ctype = pair1;
-	cview2->ctype = pair2;
+	cview1->ctype = pair1 + " " + period1->text() + " minutes";
+	cview2->ctype = pair2 + " " + period2->text() + " minutes";
+	if (pn1 < 1) pn1 = 60;
+	if (pn2 < 1) pn2 = 60;
 ctext->clear();
 
 	cview1->ps.name = pair1;
-	QString addr1 = "https://api.kraken.com/0/public/OHLC?pair=" + pair1 + "&interval=60&since="
-		+ QString::number(QDateTime::currentSecsSinceEpoch() - 60 * 60 * 300);
+	QString addr1 = "https://api.kraken.com/0/public/OHLC?pair=" + pair1 + "&interval=" + period1->text() + "&since="
+		+ QString::number(QDateTime::currentSecsSinceEpoch() - 300 * 60 * pn1);
 	QUrl url1(addr1);
 	QNetworkRequest req1(url1);
 	wohlc1 = new Web();
@@ -174,8 +188,8 @@ ctext->clear();
 	connect(wohlc1, SIGNAL(read_ok(QString)), cview1, SLOT(_read_ohlc(QString)));
 
 	cview2->ps.name = pair2;
-	QString addr2 = "https://api.kraken.com/0/public/OHLC?pair=" + pair2 + "&interval=60&since="
-		+ QString::number(QDateTime::currentSecsSinceEpoch() - 60 * 60 * 300);
+	QString addr2 = "https://api.kraken.com/0/public/OHLC?pair=" + pair2 + "&interval=" + period2->text() + "&since="
+		+ QString::number(QDateTime::currentSecsSinceEpoch() - 300 * 60 * pn2);
 	QUrl url2(addr2);
 	QNetworkRequest req2(url2);
 	wohlc2 = new Web();
@@ -262,10 +276,19 @@ ERRC:	ctext->append("Save error");
 
 void App::_time()
 {
-	qint64 utime = QDateTime::currentSecsSinceEpoch() % (15 * 60);
+	int pn1 = period1->text().toInt(), pn2 = period2->text().toInt();
+	if (pn1 < 1) pn1 = 60;
+	if (pn2 < 1) pn2 = 60;
+
+	qint64 utime = QDateTime::currentSecsSinceEpoch() % (std::min(pn1, pn2) * 30);
 	syst->setText(QDateTime::currentDateTime().toString());
 	if (utime == 0) _get_pair();
-	else if (utime % 5 == 0) _get_depth();
+	else if (utime % 6 == 0) _get_depth();
+	else {
+//TODO: Remove this hack
+		cview1->ov->update();
+		cview2->ov->update();
+	}
 }
 
 void App::resizeEvent(QResizeEvent *evt) {

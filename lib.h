@@ -90,7 +90,7 @@ public:
 	virtual void leaveEvent(QEvent *event);
 private:
 	static const int maxlock = 5;
-	bool view_active = 1;
+	bool view_active = false;
 	int ylock[maxlock] = {0}, nlock = 0;
 	double precision = 100.0;
 	PS *ps;
@@ -145,7 +145,7 @@ private:
 	Chart *cview1, *cview2;
 	QComboBox *combo1, *combo2;
 	QLabel *syst, *tick;
-	QLineEdit *fpath;
+	QLineEdit *fpath, *period1, *period2;
 	QTextEdit *ctext;
 	Web *wdepth = 0, *wohlc1 = 0, *wohlc2 = 0;
 };
