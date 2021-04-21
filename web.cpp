@@ -18,7 +18,6 @@ void Web::_read(QNetworkReply *ret)
 {
 	QString str(ret->readAll());
 	ret->close();
-	connect(ret, SIGNAL(finished(QNetworkReply *)), this, SLOT(_delete_reply(QNetworkReply *)));
 	emit read_ok(str);
 }
 

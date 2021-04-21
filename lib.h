@@ -69,15 +69,15 @@ class Web : public QObject
 {
 	Q_OBJECT
 public:
+	~Web() {if (mgr) delete mgr;};
 	void get(QNetworkRequest req);
 	void post(QNetworkRequest req, QByteArray data);
 signals:
 	void read_ok(QString str);
 private slots:
-	void _delete_reply(QNetworkReply *ret) {delete ret; delete mgr;};
 	void _read(QNetworkReply *ret);
 private:
-	QNetworkAccessManager *mgr;
+	QNetworkAccessManager *mgr = 0;
 };
 
 class Overlay : public QWidget
@@ -134,19 +134,15 @@ public:
 	App();
 	void resizeEvent(QResizeEvent *evt);
 private slots:
-	void _fpath(QString str) {fpath->setText(str + ".csv");};
 	void _get_depth();
 	void _get_pair();
 	void _quit();
 	void _read_depth(QString str);
-	void _save(bool clearMark = false);
 	void _time();
 private:
-	Chart *cview1, *cview2;
+	Chart *cview1, *cview1b, *cview2, *cview2b;
 	QComboBox *combo1, *combo2;
 	QLabel *syst, *tick;
-	QLineEdit *fpath, *period1, *period2;
-	QTextEdit *ctext;
 	Web *wdepth = 0, *wohlc1 = 0, *wohlc2 = 0;
 };
 
