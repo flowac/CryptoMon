@@ -15,5 +15,5 @@ qmake -makefile project.pro
 make  
 
 Demo:  
-[![demo_video](https://img.youtube.com/vi/djXWdDOxsqg/0.jpg)](https://www.youtube.com/watch?v=djXWdDOxsqg)  
+![alt text](https://github.com/flowac/CryptoMon/blob/master/sample.png?raw=true)
 

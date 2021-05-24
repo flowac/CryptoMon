@@ -1,34 +1,5 @@
 #include "lib.h"
 
-void Overlay::config(bool forceLoad)
-{
-	int i;
-	QString buf = "", cpath = "." + ps->name + ".cfg";
-	QStringList blist;
-	QTextStream sio;
-	QFile cfg(cpath);
-
-	if (forceLoad || !nlock) goto LOAD;
-	if (!cfg.open(QIODevice::WriteOnly)) goto RETURN;
-	sio.setDevice(&cfg);
-	for (i = 0; i < std::min(maxlock, nlock); i++) buf += QString::number(ylock[i]) + ",";
-	sio << buf;
-	sio.flush();
-	cfg.close();
-	goto RETURN;
-
-LOAD:	if (!cfg.open(QIODevice::ReadOnly | QIODevice::Text)) goto RETURN;
-	sio.setDevice(&cfg);
-	buf = sio.readLine();
-	blist = buf.split(",");
-	for (i = nlock = 0; i < blist.size() && nlock < maxlock; i++) {
-		ylock[nlock] = blist[i].toInt();
-		if (ylock[nlock] != 0) nlock++;
-	}
-	cfg.close();
-RETURN:	update();
-}
-
 void Overlay::enterEvent(QEvent *e) {(void)e; view_active = 1; this->update(); setFocus();}
 void Overlay::leaveEvent(QEvent *e) {(void)e; view_active = 0; this->update(); clearFocus();}
 
@@ -51,7 +22,8 @@ void Overlay::paintEvent(QPaintEvent *)
 	fnt.setPixelSize(FONT_SZ);
 	pnt.setFont(fnt);
 
-	if (!view_active) goto HIDE;
+	if (!view_active || mx < 0 || mx > w0 || my < 0 || my > h0) goto HIDE;
+	//TODO: Room for optimization here
 	xp = (int)(( ((double)mx) / w0) * (ps->len - XOFFSET)) + XOFFSET;
 	price = ps->ph[xp].price;
 	pnt.drawLine(1, my, w0 - 1, my);
@@ -79,7 +51,7 @@ void Overlay::paintEvent(QPaintEvent *)
 	snprintf(buf, BUF_200, "%.0f  %.2f%%", target, percent);
 	pnt.drawText(w1, std::max(FONT_SZ * 3, std::min(my, (int)h1 - FONT_SZ - 2)), buf);
 
-HIDE:	for (i = 0; i < std::min(nlock, maxlock); i++) {
+HIDE:	for (i = 0; i < std::min(nlock, MAXLOCK); i++) {
 		ly = h1 - (ylock[i] - ps->pmin) * h1 / (ps->pmax - ps->pmin);
 		pnt.drawLine(1, ly, w0 - 1, ly);
 		snprintf(buf, BUF_200, "%d", ylock[i]);
@@ -124,7 +96,7 @@ void Overlay::mouseMoveEvent(QMouseEvent *evt)
 void Overlay::mousePressEvent(QMouseEvent *evt)
 {
 	double h1 = height() * ps->div1;
-	int lpos = nlock % maxlock;
+	int lpos = nlock % MAXLOCK;
 	int my = mpos.y();
 
 	switch (evt->button()) {

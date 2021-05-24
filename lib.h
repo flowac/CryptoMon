@@ -1,9 +1,10 @@
 #ifndef _MAIN_LIB_H_
 #define _MAIN_LIB_H_
 
+#include <cassert>
 #include <cmath>
-//#include <cstdio>
-//#include <cstdint>
+#include <cstdio>
+#include <cstdint>
 
 #include <QHBoxLayout>
 #include <QComboBox>
@@ -43,8 +44,11 @@
 #define LOG_SZ	18
 #define TAB_H	(FONT_SZ + 6)
 #define SPACE	5
-#define XOFFSET	50
+#define XOFFSET	40
 #define TD_LEN	16
+#define MAXLOCK	5
+#define P1_LEN	60	//Elements to show for short period
+#define P2_LEN	120	//Elements to show for long period
 
 typedef struct PRICE_HISTORY
 {
@@ -60,7 +64,6 @@ typedef struct PRICE_SUMMARY
 	double last = 0, rsi = 0;
 	double div1 = 0.8, div2 = 0.2;
 	int32_t len = 0;
-	QString name;
 } PS;
 
 void LOGF(const char *str, int level = 0);
@@ -84,14 +87,12 @@ class Overlay : public QWidget
 {
 	Q_OBJECT
 public:
-	Overlay(PS *ps, QWidget *p):QWidget(p) {this->ps=ps; setFocusPolicy(Qt::StrongFocus);};
-	void config(bool forceLoad = false);
+	Overlay(PS *ps, QWidget *p):QWidget(p) {this->ps=ps;setFocusPolicy(Qt::StrongFocus);};
 	virtual void enterEvent(QEvent *event);
 	virtual void leaveEvent(QEvent *event);
 private:
-	static const int maxlock = 5;
 	bool view_active = false;
-	int ylock[maxlock] = {0}, nlock = 0;
+	int ylock[MAXLOCK] = {0}, nlock = 0;
 	double precision = 100.0;
 	PS *ps;
 	QPoint mpos, gpos;
@@ -108,10 +109,10 @@ class Chart : public QGraphicsView
 {
 	Q_OBJECT
 public:
-	PS ps;
-	QString ctype = "";
+	PS *ps;
+	QString ctype, name;
 	Overlay *ov;
-	Chart(QWidget *p);
+	Chart(QWidget *p, PS *ps);
 	void clear();
 	void do_calc();
 	void do_last();
@@ -120,7 +121,7 @@ public:
 private slots:
 	void _read_ohlc(QString str);
 private:
-	int32_t n_items = 0;
+	int n_items = 0;
 	QBrush bred, bgreen, byellow, bblack, bwhite;
 	QGraphicsScene scn;
 	QPen pred, pgreen, pyellow, pwhite, pgray, pgray2, ppink, pblack;
@@ -134,17 +135,19 @@ public:
 	App();
 	void resizeEvent(QResizeEvent *evt);
 private slots:
-	void _get_depth();
+	void _get_tick();
 	void _get_pair();
 	void _quit();
-	void _read_depth(QString str);
+	void _read_tick(QString str);
 	void _time();
 private:
-	Chart *cview1, *cview1b, *cview2, *cview2b;
+	Chart *cview1, *cview2, *cview3, *cview4;
+	//TODO: move PS back into Chart class
+	PS ps1, ps2, ps3, ps4;//Note: Charts get messed up if malloc'ed in Chart class
 	QComboBox *combo1, *combo2;
 	QLabel *syst, *tick;
-	Web *wdepth = 0, *wohlc1 = 0, *wohlc2 = 0;
+	Web *wdepth = 0, *wohlc1 = 0, *wohlc2 = 0, *wohlc3 = 0, *wohlc4 = 0;
+	void _get_pair_helper(QString pair, int interval, int length, Chart *cview, Web *wohlc);
 };
-
 #endif
 
